@@ -4,8 +4,14 @@ CC = gcc
 main: main.c
 	$(CC) $(CFLAGS) $< -o $@
 
+sandbox: sandbox.c
+	$(CC) $(CFLAGS) $< -o $@
+
 run: main
 	./main
+
+runs: sandbox
+	./sandbox
 
 clean: 
 	rm -f main *.o *~ tmp*
