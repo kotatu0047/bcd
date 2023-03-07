@@ -1,22 +1,28 @@
 CFLAGS=-std=c11 -g -static
 CC = gcc
 
-main: main.c
-	$(CC) $(CFLAGS) $< -o $@
+bcd: main.o formulaParser.o
+	$(CC) $(CFLAGS) $^ -o $@
 
 sandbox: sandbox.c
 	$(CC) $(CFLAGS) $< -o $@
 
-run: main
-	./main
+formulaParser: formulaParser.c
+	$(CC) $(CFLAGS) $< -c $@
+
+main: main.c
+	$(CC) $(CFLAGS) $< -c $@
+
+run: bcd
+	./bcd "45 + 75"
 
 runs: sandbox
 	./sandbox
 
 clean: 
-	rm -f main *.o *~ tmp*
+	rm -f bcd sandbox *.o *~ tmp*
 
-.PHONY: main clean
+.PHONY: bcd clean
 
 # gcc_options = -std=c++17 -Wall --pedantic-errors
 
