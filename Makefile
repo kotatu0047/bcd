@@ -7,6 +7,9 @@ bcd: main.o formulaParser.o
 sandbox: sandbox.c
 	$(CC) $(CFLAGS) $< -o $@
 
+sandbox2: sandbox2.c
+	$(CC) $(CFLAGS) $< -o $@
+
 formulaParser: formulaParser.c
 	$(CC) $(CFLAGS) $< -c $@
 

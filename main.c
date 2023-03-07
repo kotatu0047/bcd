@@ -3,6 +3,16 @@
 #include <stdbool.h>
 #include "formulaParser.h"
 
+// デバッグ用   https://hotnews8.net/programming/tricky-code/macro03
+/*******************************************/
+// #define DEBUG //makeの引数で、有効,無効を切り替えるので、ここは触らないように
+#ifdef DEBUG
+#define debug_printf printf
+#else
+#define debug_printf 1 ? (void)0 : printf
+#endif
+/*******************************************/
+
 #define BCD_STRUCT_SIZE 12 // bcd構造体のサイズ
 #define BCD_9_INDEX 8
 #define BCD_1_INDEX 4
@@ -49,9 +59,14 @@ struct STACKTYPE
     NodeKind nodeKind;
 };
 
+// グローバル変数
+/*******************************************/
+
 // 計算用スタック
 STACKTYPE *stack[CALCULATE_STACK_MAX] = {};
 unsigned short stackIndex = 0;
+
+/*******************************************/
 
 // プロトタイプ宣言
 /*******************************************/
@@ -138,7 +153,7 @@ void printStack()
         printf("|\n");
         printf("|__________________________|\n");
 
-          memset(str, 0, sizeof str); 
+        memset(str, 0, sizeof str);
         //  snprintf(str, BCD_MAX_DIGITS + 1, " ");
         // str = "1111111111\0";
     }
@@ -169,14 +184,13 @@ void convertBCDtoSTR(BCD *bcd, char *str)
         snprintf(high_buf, 3, "%d", high);
         str[strIndex] = high_buf[0];
         strIndex++;
- 
+
         short low = bcd->value[i] & 0x0f;
         snprintf(low_buf, 3, "%d", low);
         str[strIndex] = low_buf[0];
         strIndex++;
-        memset(high_buf, 0, sizeof high_buf); 
-        memset(low_buf, 0, sizeof low_buf); 
-
+        memset(high_buf, 0, sizeof high_buf);
+        memset(low_buf, 0, sizeof low_buf);
     }
     str[strIndex] = '\0';
 }
@@ -227,10 +241,12 @@ BCD *convertDECtoBCD(unsigned long dec, bool _sign)
         }
     }
 
+#ifdef DEBUG
     dump_hex(bcd->value, 12);
-    printf("0x%024x, 0x%01x  0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x \n", bcd->bitFiled.binary,
-           bcd->bitFiled.BCD_10, bcd->bitFiled.BCD_9, bcd->bitFiled.BCD_8, bcd->bitFiled.BCD_7, bcd->bitFiled.BCD_6,
-           bcd->bitFiled.BCD_5, bcd->bitFiled.BCD_4, bcd->bitFiled.BCD_3, bcd->bitFiled.BCD_2, bcd->bitFiled.BCD_1);
+#endif
+    debug_printf("0x%024x, 0x%01x  0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x \n", bcd->bitFiled.binary,
+                 bcd->bitFiled.BCD_10, bcd->bitFiled.BCD_9, bcd->bitFiled.BCD_8, bcd->bitFiled.BCD_7, bcd->bitFiled.BCD_6,
+                 bcd->bitFiled.BCD_5, bcd->bitFiled.BCD_4, bcd->bitFiled.BCD_3, bcd->bitFiled.BCD_2, bcd->bitFiled.BCD_1);
 
     return bcd;
 }
@@ -307,15 +323,9 @@ BCD *add(BCD *a, BCD *b)
         }
         tmp_2 = (unsigned short)((a_2 + b_2 + carryLowerBit) % 10);
 
-        // printf("0x %08x\n" , (tmp_1 | ((tmp_2 << 4) & 0xf0)) & 0x000000ff);
         result->value[j] = tmp_1 | (tmp_2 << 4);
         tmp_1 = 0;
         tmp_2 = 0;
-
-        // dump_hex(result->value, 12);
-        // printf("0x%024x, 0x%01x  0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x \n", result->bitFiled.binary,
-        //        result->bitFiled.BCD_10, result->bitFiled.BCD_9, result->bitFiled.BCD_8, result->bitFiled.BCD_7, result->bitFiled.BCD_6,
-        //        result->bitFiled.BCD_5, result->bitFiled.BCD_4, result->bitFiled.BCD_3, result->bitFiled.BCD_2, result->bitFiled.BCD_1);
     }
 
     return result;
@@ -385,15 +395,9 @@ BCD *unsignedSub(BCD *a, BCD *b)
             tmp_2 = a_2 - b_2 - carryLowerBit;
         }
 
-        // printf("0x %08x\n" , (tmp_1 | ((tmp_2 << 4) & 0xf0)) & 0x000000ff);
         result->value[j] = tmp_1 | (tmp_2 << 4);
         tmp_1 = 0;
         tmp_2 = 0;
-
-        // dump_hex(result->value, 12);
-        // printf("0x%024x, 0x%01x  0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x \n", result->bitFiled.binary,
-        //        result->bitFiled.BCD_10, result->bitFiled.BCD_9, result->bitFiled.BCD_8, result->bitFiled.BCD_7, result->bitFiled.BCD_6,
-        //        result->bitFiled.BCD_5, result->bitFiled.BCD_4, result->bitFiled.BCD_3, result->bitFiled.BCD_2, result->bitFiled.BCD_1);
     }
 
     return result;
@@ -443,23 +447,35 @@ void initStack(Node *node)
  */
 int main(int argc, char **argv)
 {
+    if (argc != 2)
+    {
+        fprintf(stderr, "引数の個数が正しくありません\n");
+        exit(1);
+    }
+
     // トークナイズしてパースする
-    Node *node = formulaParser(argc, argv);
+    Node *node = formulaParser(argc, argv[1]);
     initStack(node);
+    debug_printf("input param is \"%s\"\n", argv[1]);
+
+#ifdef DEBUG
     printStack();
+#endif
 
     BCD *bcd500 = convertDECtoBCD(8294967295, false);
-    printf("\n\n\n");
+    debug_printf("\n\n\n");
     BCD *bcd295 = convertDECtoBCD(4294967295, false);
-    printf("\n\n\n");
+    debug_printf("\n\n\n");
 
     BCD *addResult = add(bcd500, bcd295);
-    printf("\n\n\n");
+    debug_printf("\n\n\n");
 
+#ifdef DEBUG
     dump_hex(addResult->value, 12);
-    printf("0x%024x, 0x%01x  0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x \n", addResult->bitFiled.binary,
-           addResult->bitFiled.BCD_10, addResult->bitFiled.BCD_9, addResult->bitFiled.BCD_8, addResult->bitFiled.BCD_7, addResult->bitFiled.BCD_6,
-           addResult->bitFiled.BCD_5, addResult->bitFiled.BCD_4, addResult->bitFiled.BCD_3, addResult->bitFiled.BCD_2, addResult->bitFiled.BCD_1);
+#endif
+    debug_printf("0x%024x, 0x%01x  0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x 0x%01x \n", addResult->bitFiled.binary,
+                 addResult->bitFiled.BCD_10, addResult->bitFiled.BCD_9, addResult->bitFiled.BCD_8, addResult->bitFiled.BCD_7, addResult->bitFiled.BCD_6,
+                 addResult->bitFiled.BCD_5, addResult->bitFiled.BCD_4, addResult->bitFiled.BCD_3, addResult->bitFiled.BCD_2, addResult->bitFiled.BCD_1);
 
     // BCD *bcd0 = convertDECtoBCD(0, true);
     // printf("\n\n\n");

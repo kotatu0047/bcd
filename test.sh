@@ -14,10 +14,10 @@ assert() {
   fi
 }
 
-# assert 0 0
-# assert 42 42
-assert 21 "5*20-(4+6)"
-# assert 41 " 1 + 948969 + 5 + (4 + 99 + 10 + 0) "
+# assert 0
+assert 42 "40+2"
+# assert 21 "5*20-(4+6)"
+# assert 41 " 1 + 948969 * 5 + (4 * 99 + 10 + 0) "
 # # assert 41 " 12 -+ 34 - 5 "
 # # assert 41 " 12 ++ 34 - 5 "
 # assert 47 "5+6*7"
