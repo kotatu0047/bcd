@@ -1,8 +1,25 @@
-CFLAGS=-std=c11 -g -static
+CFLAGS=-std=c11 -g -static  # todo オプションの必要性の検証
 CC = gcc
+# DD = $(DEBUG)
 
-bcd: main.o formulaParser.o
-	$(CC) $(CFLAGS) $^ -o $@
+# e:
+# 	echo $(CC) $(CFLAGS) $(DD)
+
+
+bin: main.o formulaParser.o bcd.o
+	$(CC) $(CFLAGS) $(DEBUG) $^ -o $@
+
+formulaParser.o: formulaParser.c
+	$(CC) $(CFLAGS) $(DEBUG) -o $@ -c $<
+
+bcd.o: bcd.c
+	$(CC) $(CFLAGS) $(DEBUG) -o $@ -c $<
+
+main.o: main.c
+	$(CC) $(CFLAGS) $(DEBUG) -o $@ -c $<
+
+run: bin
+	./bin "45 + 75"
 
 sandbox: sandbox.c
 	$(CC) $(CFLAGS) $< -o $@
@@ -10,20 +27,11 @@ sandbox: sandbox.c
 sandbox2: sandbox2.c
 	$(CC) $(CFLAGS) $< -o $@
 
-formulaParser: formulaParser.c
-	$(CC) $(CFLAGS) $< -c $@
-
-main: main.c
-	$(CC) $(CFLAGS) $< -c $@
-
-run: bcd
-	./bcd "45 + 75"
-
 runs: sandbox
 	./sandbox
 
 clean: 
-	rm -f bcd sandbox *.o *~ tmp*
+	rm -f bin sandbox *.o *~ tmp*
 
 .PHONY: bcd clean
 
