@@ -32,7 +32,7 @@ SOFTWARE.
 Token *token;
 
 // 入力プログラム
-char *user_input;
+char *input;
 
 // エラー箇所を報告する
 void error_at(char *loc, char *fmt, ...)
@@ -41,13 +41,13 @@ void error_at(char *loc, char *fmt, ...)
   va_start(ap, fmt);
 
   fprintf(stderr, "loc is %p\n", loc);
-  fprintf(stderr, "user_input is %p\n", user_input);
+  fprintf(stderr, "input is %p\n", input);
 
-  int pos = loc - user_input;
+  int pos = loc - input;
 
   fprintf(stderr, "pos is %d\n", pos);
 
-  fprintf(stderr, "%s\n", user_input);
+  fprintf(stderr, "%s\n", input);
   fprintf(stderr, "%*s", pos, " "); // pos個の空白を出力
   fprintf(stderr, "^ ");
   vfprintf(stderr, fmt, ap);
@@ -209,17 +209,13 @@ Token *tokenize(char *p)
   return head.next;
 }
 
-Node *formulaParser(int argc, char **argv)
+Node *formulaParser(int argc, char *argv)
 {
-  if (argc != 2)
-  {
-    fprintf(stderr, "引数の個数が正しくありません\n");
-    exit(1);
-  }
+
 
   // トークナイズしてパースする
-  user_input = argv[1];
-  token = tokenize(user_input);
+  input = argv;
+  token = tokenize(input);
   Node *node = expr();
 
   return node;

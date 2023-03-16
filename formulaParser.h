@@ -108,7 +108,7 @@ struct Node
 
 // Token *tokenize(char *p);
 
-Node *formulaParser(int argc, char **argv);
+Node *formulaParser(int argc, char *argv);
 
 //BCDプロジェクト向けに作成したもの
 char getOperatorFromNNodeKind(NodeKind kind);
