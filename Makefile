@@ -1,4 +1,4 @@
-CFLAGS=-std=c11 -g -static  # todo オプションの必要性の検証
+CFLAGS=-std=c11 -g -static -Wall  # todo オプションの必要性の検証
 CC = gcc
 # DD = $(DEBUG)
 

@@ -212,7 +212,6 @@ Token *tokenize(char *p)
 Node *formulaParser(int argc, char *argv)
 {
 
-
   // トークナイズしてパースする
   input = argv;
   token = tokenize(input);
