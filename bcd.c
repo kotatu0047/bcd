@@ -84,6 +84,7 @@ void convertBCDtoSTR(BCD *bcd, char *str, bool isDisplaySign, bool isPaddingZero
     }
 
     str[strIndex] = '\0';
+    // printf("%s" , str);
 }
 
 /**
@@ -143,19 +144,34 @@ BCD *convertDECtoBCD(unsigned long dec, bool _sign)
 }
 
 /**
+ * -0or,+0であればtureを返す
+ *
+ */
+bool isZero(BCD *bcd)
+{
+    for (size_t i = BCD_1_INDEX; i <= BCD_9_INDEX; i++)
+    {
+        unsigned char buf = bcd->value[i];
+
+        if (buf > 0)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
  * 符号部は評価せず、絶対値が大きい方を判別する
  *
  */
 COMPEAR_RESULT absCompear(BCD *a, BCD *b)
 {
-    BCD *bcd = calloc(1, sizeof(BCD));
-    bcd->bitFiled = a->bitFiled; // たぶんここバグってる
-    // bcd->bitFiled.sign = a->bitFiled.sign;
-
-    debug_printf("dump_hex(bcd->value, 12);   ");
-#ifdef DEBUG
-    dump_hex(bcd->value, 12);
-#endif
+    //     debug_printf("dump_hex(bcd->value, 12);   ");
+    // #ifdef DEBUG
+    //     dump_hex(bcd->value, 12);
+    // #endif
 
     // 2桁(1byt)ずつ上位ケタから比較していく
     for (int i = BCD_9_INDEX; i >= BCD_1_INDEX; i--)
@@ -176,9 +192,72 @@ COMPEAR_RESULT absCompear(BCD *a, BCD *b)
 }
 
 /**
+ * 符号部は評価せず、絶対値が大きい方を判別する
+ * + 同時にa,bがゼロであるかの検査を行う
+ *  パフォーマンス上必要であれば実装する
+ */
+// COMPEAR_RESULT absCompearWithIsZero(BCD *a, BCD *b)
+
+/**
+ * 符号部も含め、値が大きい方を判別する
+ * -0と+0は同値とする
+ *
+ *  https://drive.google.com/file/d/1Q7Ms2zlU9dQxAp-k1WYo1yDxIUqUM8RB/view?usp=share_link
+ *
+ */
+COMPEAR_RESULT bcdCompear(BCD *a, BCD *b)
+{
+    COMPEAR_RESULT absResult = absCompear(a, b);
+    bool aIsNegative = a->bitFiled.sign;
+    bool bIsNegative = b->bitFiled.sign;
+
+    if (absResult == LEFT)
+    {
+        if (!aIsNegative) // a>0
+        {
+            return LEFT;
+        }
+        else
+        {
+            return RIGHT;
+        }
+    }
+    else if (absResult == RIGHT)
+    {
+        if (!bIsNegative) // b>0
+        {
+            return RIGHT;
+        }
+        else
+        {
+            return LEFT;
+        }
+    }
+    else if (absResult == EQUAL)
+    {
+        if ((aIsNegative ^ bIsNegative) == false) // a,bの符号が同じ
+        {
+            return EQUAL;
+        }
+        else if (isZero(a) && isZero(b))
+        {
+            return EQUAL;
+        }
+        else
+        {
+            // |a|=|b| && |a| != 0 && |b| != 0 && a,bの符号は違う
+            //  +符号を持つ方を返す
+            return !aIsNegative ? LEFT : RIGHT;
+        }
+    }
+}
+
+/**
  *
  * 符号部は評価せずに、単純に|a| + |b| を返す
  * 戻り値の符号部は必ず+になる
+ *
+ * todo 桁溢れ対策
  *
  */
 BCD *unsignedAdd(BCD *a, BCD *b)
@@ -239,7 +318,7 @@ BCD *unsignedAdd(BCD *a, BCD *b)
 /**
  *
  * 符号部は評価せずに、単純に|a| - |b| を返す
- * 戻り値が-になることもある
+ * 戻り値が-になる可能性もある
  *
  */
 BCD *unsignedSub(BCD *a, BCD *b)
@@ -250,7 +329,7 @@ BCD *unsignedSub(BCD *a, BCD *b)
     BCD *left = NULL;
     BCD *right = NULL;
 
-    // a >= b となるようにする
+    // left >= right となるようにする
     COMPEAR_RESULT cmp = absCompear(a, b);
     if (cmp == LEFT || cmp == EQUAL)
     {
@@ -345,4 +424,20 @@ BCD *addOrSubForSignedBCD(BCD *a, BCD *b, OperatorKind op)
     }
 
     return result;
+}
+
+/**
+ * 符号付き加算
+ */
+BCD *add(BCD *a, BCD *b)
+{
+    return addOrSubForSignedBCD(a, b, OP_ADD);
+}
+
+/**
+ * 符号付き減算
+ */
+BCD *sub(BCD *a, BCD *b)
+{
+    return addOrSubForSignedBCD(a, b, OP_SUB);
 }
